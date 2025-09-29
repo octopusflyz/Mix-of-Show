@@ -1,0 +1,157 @@
+# 实验名称
+name: 6101_EDLoRA_oilc_sdv15_B4_Repeat250
+# 随机种子，用于确保训练可重现
+manual_seed: 0
+# 混合精度训练，使用fp16以加速训练并减少内存使用
+mixed_precision: fp16
+# 梯度累积步数
+gradient_accumulation_steps: 1
+
+# dataset and data loader settings
+datasets:
+  train:
+    # 训练数据集类型
+    name: LoraDataset
+    # 概念列表JSON文件路径
+    concept_list: datasets/data_cfgs/MixofShow/single-concept/style/oilc.json
+    # 是否使用字幕（文本描述）
+    use_caption: true
+    # 是否使用掩码
+    use_mask: false
+    # 图像变换列表
+    instance_transform:
+      - { type: HumanResizeCropFinalV3, size: 512, crop_p: 0.5 }
+      - { type: ToTensor }
+      - { type: Normalize, mean: [ 0.5 ], std: [ 0.5 ] }
+      - { type: ShuffleCaption, keep_token_num: 1 }
+      - { type: EnhanceText, enhance_type: style }
+    # 字幕中token替换映射
+    replace_mapping:
+      <TOK>: <oilc1> <oilc2>
+    # 每GPU批大小
+    batch_size_per_gpu: 2
+    # 数据集放大比例（重复次数）
+    dataset_enlarge_ratio: 250
+
+  val_vis:
+    # 验证可视化数据集类型
+    name: PromptDataset
+    # 验证提示文件路径
+    prompts: datasets/validation_prompts/single-concept/style/test_oilc.txt
+    # 每个提示生成的样本数
+    num_samples_per_prompt: 8
+    # 潜在空间大小
+    latent_size: [ 4,64,64 ]
+    # 字幕中token替换映射
+    replace_mapping:
+      <TOK>: <oilc1> <oilc2>
+    batch_size_per_gpu: 4
+
+# 模型配置
+models:
+  # 预训练模型路径
+  pretrained_path: /mnt/netdisk2/zhangyf/model/sdv1.5
+  # 启用ED-LoRA（true）或标准LoRA（false）
+  enable_edlora: true  # true means ED-LoRA, false means vallina LoRA
+  # 微调配置
+  finetune_cfg:
+    # 文本嵌入微调
+    text_embedding:
+      # 启用文本嵌入微调
+      enable_tuning: true
+      # 文本嵌入学习率
+      lr: !!float 1e-3
+    # 文本编码器微调
+    text_encoder:
+      # 启用文本编码器微调
+      enable_tuning: true
+      # 文本编码器LoRA配置
+      lora_cfg:
+        # LoRA秩
+        rank: 4
+        # LoRA alpha
+        alpha: 1.0
+        # LoRA应用位置（CLIPAttention层）
+        where: CLIPAttention
+      # 文本编码器学习率
+      lr: !!float 1e-5
+    # UNet微调
+    unet:
+      # 启用UNet微调
+      enable_tuning: true
+      # UNet LoRA配置
+      lora_cfg:
+        rank: 4
+        alpha: 1.0
+        # LoRA应用位置（Attention层）
+        where: Attention
+      # UNet学习率
+      lr: !!float 1e-4
+  # 要学习的新概念token
+  new_concept_token: <oilc1>+<oilc2>
+  # 嵌入初始化token
+  initializer_token: <rand-0.013>+oil painting
+  # 噪声偏移，用于稳定训练
+  noise_offset: 0.01
+  # 注意力正则化权重
+  attn_reg_weight: 0.01
+  # 使用全身份正则化
+  reg_full_identity: false
+  # 使用掩码损失
+  use_mask_loss: false
+  # 启用梯度检查点（false以节省内存）
+  gradient_checkpoint: false
+  # 启用xformers以加速注意力计算
+  enable_xformers: true
+
+# 路径配置
+# path
+path:
+  # 预训练网络路径（空表示无）
+  pretrain_network: ~
+
+# 训练设置
+# training settings
+train:
+  # 生成器优化器
+  optim_g:
+    # 优化器类型
+    type: AdamW
+    # 学习率（0.0因为使用各组件单独学习率）
+    lr: !!float 0.0 # no use since we define different component lr in model
+    # 权重衰减
+    weight_decay: 0.01
+    # AdamW的betas参数
+    betas: [ 0.9, 0.999 ] # align with taming
+
+  # UNet KV丢弃率
+  # dropkv
+  unet_kv_drop_rate: 0
+  # 学习率调度器
+  scheduler: linear
+  # 嵌入归一化阈值
+  emb_norm_threshold: !!float 5.5e-1
+
+# 验证设置
+# validation settings
+val:
+  # 保存时进行验证
+  val_during_save: true
+  # 组合可视化
+  compose_visualize: true
+  # 可视化alpha列表（0：仅嵌入，1.0：全LoRA权重）
+  alpha_list: [0, 0.7, 1.0] # 0 means only visualize embedding (without lora weight)
+  # 采样配置
+  sample:
+    # 推理步数
+    num_inference_steps: 50
+    # 采样引导尺度
+    guidance_scale: 7.5
+
+# 日志设置
+# logging settings
+logger:
+  # 打印频率
+  print_freq: 10
+  # 保存检查点频率
+  save_checkpoint_freq: !!float 10000
