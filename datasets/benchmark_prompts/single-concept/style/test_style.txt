@@ -1,0 +1,22 @@
+A <TOK> painting, in the snow
+A <TOK> painting, at night
+A <TOK> painting, in autumn
+A <TOK> painting, in a sunny day
+A <TOK> painting, in thunder and lightning
+
+A painting of a <TOK> in the style of Vincent Van Gogh
+A painting of a <TOK> in the style of Claude Monet
+A <TOK> in the style of Pixel Art
+
+A close view of <TOK>
+A top view of <TOK>
+A bottom view of <TOK>
+
+T-shirts with <TOK> pattern
+A dress with <TOK> pattern
+A <TOK> drawing
+Fabric in <TOK> texture
+
+<TOK> painting, red flowers, yellow flowers
+<TOK> painting, pink flowers, blue sky
+<TOK> painting, orange flowers, green leaves, beige background

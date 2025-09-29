@@ -1,0 +1,7 @@
+painting of <TOK>
+<TOK>
+photo of <TOK>
+drawing of <TOK>
+pattern of <TOK>
+a painting of <TOK>, in a gallery
+<TOK>. red flowers. green leaves. beige background.

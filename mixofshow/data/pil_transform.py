@@ -14,6 +14,7 @@ from torchvision.transforms.functional import InterpolationMode
 from mixofshow.utils.registry import TRANSFORM_REGISTRY
 
 
+# 构建变换函数，根据配置选项创建变换实例
 def build_transform(opt):
     """Build performance evaluator from options.
     Args:
@@ -25,6 +26,7 @@ def build_transform(opt):
     return transform
 
 
+# 注册标准 torchvision 变换到注册表
 TRANSFORM_REGISTRY.register(Normalize)
 TRANSFORM_REGISTRY.register(Resize)
 TRANSFORM_REGISTRY.register(RandomHorizontalFlip)
@@ -32,6 +34,7 @@ TRANSFORM_REGISTRY.register(CenterCrop)
 TRANSFORM_REGISTRY.register(RandomCrop)
 
 
+# 双线性插值调整大小变换
 @TRANSFORM_REGISTRY.register()
 class BILINEARResize(Resize):
     def __init__(self, size):
@@ -39,6 +42,7 @@ class BILINEARResize(Resize):
               self).__init__(size, interpolation=InterpolationMode.BILINEAR)
 
 
+# 成对随机裁剪变换，同时裁剪图像和掩码
 @TRANSFORM_REGISTRY.register()
 class PairRandomCrop(nn.Module):
     def __init__(self, size):
@@ -62,6 +66,7 @@ class PairRandomCrop(nn.Module):
         return img, kwargs
 
 
+# 将图像转换为 PyTorch 张量
 @TRANSFORM_REGISTRY.register()
 class ToTensor(nn.Module):
     def __init__(self) -> None:
@@ -74,6 +79,7 @@ class ToTensor(nn.Module):
         return f'{self.__class__.__name__}()'
 
 
+# 成对随机水平翻转变换，同时翻转图像和掩码
 @TRANSFORM_REGISTRY.register()
 class PairRandomHorizontalFlip(torch.nn.Module):
     def __init__(self, p=0.5):
@@ -87,6 +93,7 @@ class PairRandomHorizontalFlip(torch.nn.Module):
         return img, kwargs
 
 
+# 成对调整大小变换，同时调整图像和掩码大小
 @TRANSFORM_REGISTRY.register()
 class PairResize(nn.Module):
     def __init__(self, size):
@@ -99,6 +106,7 @@ class PairResize(nn.Module):
         return img, kwargs
 
 
+# 成对变换组合器，将多个变换组合成一个管道
 class PairCompose(nn.Module):
     def __init__(self, transforms):
         super().__init__()
@@ -122,6 +130,7 @@ class PairCompose(nn.Module):
         return format_string
 
 
+# 针对人物图像的复杂调整大小和裁剪变换，包含填充和掩码处理
 @TRANSFORM_REGISTRY.register()
 class HumanResizeCropFinalV3(nn.Module):
     def __init__(self, size, crop_p=0.5):
@@ -189,6 +198,7 @@ class HumanResizeCropFinalV3(nn.Module):
         return img, kwargs
 
 
+# 调整大小并填充掩码的新变换，包含纵横比缩放
 @TRANSFORM_REGISTRY.register()
 class ResizeFillMaskNew(nn.Module):
     def __init__(self, size, crop_p, scale_ratio):
@@ -260,6 +270,7 @@ class ResizeFillMaskNew(nn.Module):
         return img, kwargs
 
 
+# 打乱字幕变换，打乱提示词以增加多样性
 @TRANSFORM_REGISTRY.register()
 class ShuffleCaption(nn.Module):
     def __init__(self, keep_token_num):
@@ -281,10 +292,12 @@ class ShuffleCaption(nn.Module):
         return img, kwargs
 
 
+# 增强文本变换，使用模板增强提示词
 @TRANSFORM_REGISTRY.register()
 class EnhanceText(nn.Module):
     def __init__(self, enhance_type='object'):
         super().__init__()
+        # 风格模板列表
         STYLE_TEMPLATE = [
             'a painting in the style of {}',
             'a rendering in the style of {}',
@@ -307,6 +320,7 @@ class EnhanceText(nn.Module):
             'a large painting in the style of {}',
         ]
 
+        # 对象模板列表
         OBJECT_TEMPLATE = [
             'a photo of a {}',
             'a rendering of a {}',
@@ -337,6 +351,7 @@ class EnhanceText(nn.Module):
             'a photo of a small {}',
         ]
 
+        # 人物模板列表
         HUMAN_TEMPLATE = [
             'a photo of a {}', 'a photo of one {}', 'a photo of the {}',
             'the photo of a {}', 'a rendering of a {}',
